@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Controle Geladeira</title>
+  <link rel="manifest" href="./manifest.json"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Geladeira"/>
+  <meta name="theme-color" content="#0d0d0d"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0d0d;
+      color: #e8e8e8;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #fff;
+      letter-spacing: 0.02em;
+      user-select: none;
+    }
+
+    h1 span { cursor: default; }
+
+    #datetime {
+      font-size: 0.95rem;
+      color: #666;
+      letter-spacing: 0.05em;
+    }
+
+    /* Botão instalar app */
+    #btn-instalar {
+      margin-top: 14px;
+      padding: 8px 20px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+    }
+
+    #btn-instalar:hover { border-color: #444; color: #bbb; }
+
+    .box {
+      margin-top: 36px;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 32px 28px;
+      width: 360px;
+      max-width: 95vw;
+      text-align: center;
+    }
+
+    .hidden { display: none; }
+
+    .label-secao {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    /* Seletor de nome */
+    .nomes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .nome-btn {
+      margin-top: 0;
+      padding: 10px 8px;
+      background: #111;
+      color: #888;
+      border: 1px solid #222;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      transition: none;
+    }
+
+    .nome-btn.selecionado {
+      background: #fff;
+      color: #0d0d0d;
+      border-color: #fff;
+      font-weight: 600;
+    }
+
+    .nome-btn:hover:not(.selecionado) { border-color: #444; color: #bbb; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    tr { border-bottom: 1px solid #1f1f1f; }
+    tr:last-child { border-bottom: none; }
+    td { padding: 11px 4px; font-size: 0.95rem; color: #ccc; text-align: left; }
+    td:last-child { text-align: right; }
+
+    input[type="number"] {
+      width: 64px;
+      padding: 6px 8px;
+      background: #0d0d0d;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      text-align: center;
+      outline: none;
+    }
+
+    input[type="number"]:focus { border-color: #555; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0d0d0d;
+      color: #fff;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-top: 10px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus { border-color: #555; }
+
+    input::placeholder { color: #444; }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 28px;
+      background: #fff;
+      color: #0d0d0d;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    button:hover { background: #ddd; }
+
+    button:disabled {
+      background: #222;
+      color: #444;
+      cursor: not-allowed;
+    }
+
+    .btn-secundario {
+      background: transparent;
+      color: #555;
+      border: 1px solid #2a2a2a;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    .btn-secundario:hover { background: #1a1a1a; color: #888; }
+
+    .diff-pos  { color: #4caf50; font-weight: 600; }
+    .diff-neg  { color: #f44336; font-weight: 600; }
+    .diff-zero { color: #444; }
+
+    .msg-final { font-size: 1rem; color: #888; letter-spacing: 0.04em; }
+
+    .nome-destaque {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
+    }
+
+    .nome-destaque span { color: #aaa; font-weight: 600; }
+
+    /* ADM */
+    .adm-box {
+      margin-top: 36px;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 32px 28px;
+      width: 540px;
+      max-width: 95vw;
+    }
+
+    .adm-box h2 {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .registro {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .registro-info { flex: 1; }
+    .registro-data { font-size: 0.75rem; color: #444; margin-bottom: 4px; letter-spacing: 0.04em; }
+    .registro-func { font-size: 0.78rem; color: #666; margin-bottom: 5px; }
+    .registro-itens { font-size: 0.85rem; color: #aaa; line-height: 1.6; }
+
+    .btn-excluir {
+      background: transparent;
+      color: #c0392b;
+      border: 1px solid #3a1010;
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0;
+      flex-shrink: 0;
+    }
+
+    .btn-excluir:hover { background: #1a0000; border-color: #c0392b; }
+
+    .adm-vazio { font-size: 0.85rem; color: #333; }
+
+    #adm-erro { color: #e74c3c; font-size: 0.82rem; margin-top: 10px; min-height: 18px; }
+
+    .adm-acoes { display: flex; }
+  </style>
+</head>
+<body>
+
+  <h1>
+    <span onclick="seqClick('controle')">Controle</span>
+    <span onclick="seqClick('geladeira')"> Geladeira</span>
+    <span onclick="seqClick('pousada')"> Pousada</span>
+    <span onclick="seqClick('charme')"> Charme</span>
+  </h1>
+
+  <div id="datetime">--/--/---- --:--:--</div>
+
+  <!-- Botão instalar app (aparece quando disponível) -->
+  <button id="btn-instalar" class="hidden" onclick="instalarApp()">⬇ Instalar como aplicativo</button>
+
+  <!-- Box fluxo normal -->
+  <div class="box" id="box-principal">
+
+    <!-- Tela 1: seleção de nome + cadastrar -->
+    <div id="tela-inicial">
+      <p class="label-secao">Quem está registrando?</p>
+      <div class="nomes-grid">
+        <button class="nome-btn" onclick="selecionarNome(this, 'Cristina')">Cristina</button>
+        <button class="nome-btn" onclick="selecionarNome(this, 'Joelison')">Joelison</button>
+        <button class="nome-btn" onclick="selecionarNome(this, 'Henrique')">Henrique</button>
+        <button class="nome-btn" onclick="selecionarNome(this, 'Mateus')">Mateus</button>
+        <button class="nome-btn" onclick="selecionarNome(this, 'Wallace')">Wallace</button>
+      </div>
+      <button id="btn-cadastrar" onclick="abrirCadastro()" disabled>Cadastrar</button>
+    </div>
+
+    <!-- Tela 2: formulário -->
+    <div id="tela-form" class="hidden">
+      <p class="nome-destaque">Funcionário: <span id="nome-form"></span></p>
+      <p class="label-secao">Momento atual</p>
+      <table>
+        <tr><td>Água s/ gás</td><td><input type="number" min="0" id="agua-sg"/></td></tr>
+        <tr><td>Água c/ gás</td><td><input type="number" min="0" id="agua-cg"/></td></tr>
+        <tr><td>Coca-Cola</td>  <td><input type="number" min="0" id="coca"/></td></tr>
+        <tr><td>Espumante</td>  <td><input type="number" min="0" id="espumante"/></td></tr>
+      </table>
+      <button onclick="irParaConfirmacao()">Continuar</button>
+    </div>
+
+    <!-- Tela 3: confirmação -->
+    <div id="tela-confirmacao" class="hidden">
+      <p class="nome-destaque">Funcionário: <span id="nome-conf"></span></p>
+      <p class="label-secao">Verificação do turno</p>
+      <table id="tabela-diff"></table>
+      <button onclick="confirmar()">Confirmar</button>
+    </div>
+
+    <!-- Tela 4: finalizado -->
+    <div id="tela-final" class="hidden">
+      <p class="msg-final">Lista atualizada.</p>
+    </div>
+
+  </div>
+
+  <!-- Área de administração -->
+  <div id="area-adm" class="hidden">
+
+    <div class="adm-box" id="adm-login">
+      <h2>Administração</h2>
+      <input type="text"     id="adm-usuario" placeholder="Usuário"/>
+      <input type="password" id="adm-senha"   placeholder="Senha"/>
+      <div id="adm-erro"></div>
+      <div class="adm-acoes">
+        <button onclick="fazerLogin()">Continuar</button>
+        <button class="btn-secundario" onclick="sairAdm()">Voltar</button>
+      </div>
+    </div>
+
+    <div class="adm-box hidden" id="adm-painel">
+      <h2>Registros salvos</h2>
+      <div id="adm-lista"></div>
+      <button class="btn-secundario" style="margin-top:20px;" onclick="sairAdm()">Sair</button>
+    </div>
+
+  </div>
+
+  <script>
+    const ITENS = [
+      { label: 'Água s/ gás', id: 'agua-sg'  },
+      { label: 'Água c/ gás', id: 'agua-cg'  },
+      { label: 'Coca-Cola',   id: 'coca'      },
+      { label: 'Espumante',   id: 'espumante' }
+    ];
+
+    const DIAS_EXPIRACAO = 20;
+    const STORAGE_KEY    = 'geladeira_historico';
+    const ADM_USER       = 'Adm';
+    const ADM_PASS       = 'adm';
+
+    let nomeSelecionado  = null;
+    let valoresAtuais    = {};
+
+    // ── Seleção de nome ─────────────────────────────────────────
+    function selecionarNome(btn, nome) {
+      document.querySelectorAll('.nome-btn').forEach(b => b.classList.remove('selecionado'));
+      btn.classList.add('selecionado');
+      nomeSelecionado = nome;
+      document.getElementById('btn-cadastrar').disabled = false;
+    }
+
+    // ── Sequência secreta ────────────────────────────────────────
+    const SEQ_ESPERADA = ['charme', 'geladeira', 'pousada'];
+    let seqAtual = [];
+
+    function seqClick(palavra) {
+      seqAtual.push(palavra);
+      if (seqAtual.length > SEQ_ESPERADA.length) seqAtual.shift();
+      if (JSON.stringify(seqAtual) === JSON.stringify(SEQ_ESPERADA)) {
+        seqAtual = [];
+        abrirAdm();
+      }
+    }
+
+    // ── Data/hora ────────────────────────────────────────────────
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      const now = new Date();
+      const data = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear();
+      const hora = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+      document.getElementById('datetime').textContent = data + '   ' + hora;
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    // ── localStorage ─────────────────────────────────────────────
+    function carregarHistorico() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function salvarHistorico(h) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+    }
+
+    function limparAntigos() {
+      const agora  = Date.now();
+      const limite = DIAS_EXPIRACAO * 24 * 60 * 60 * 1000;
+      salvarHistorico(carregarHistorico().filter(r => (agora - r.timestamp) < limite));
+    }
+
+    function ultimoRegistro() {
+      const h = carregarHistorico();
+      return h.length > 0 ? h[h.length - 1] : null;
+    }
+
+    // ── Fluxo normal ─────────────────────────────────────────────
+    function lerFormulario() {
+      const r = {};
+      ITENS.forEach(i => {
+        const v = document.getElementById(i.id).value;
+        r[i.id] = v === '' ? null : parseInt(v);
+      });
+      return r;
+    }
+
+    function mostrar(id) {
+      ['tela-inicial','tela-form','tela-confirmacao','tela-final'].forEach(t =>
+        document.getElementById(t).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function abrirCadastro() {
+      document.getElementById('nome-form').textContent = nomeSelecionado;
+      mostrar('tela-form');
+    }
+
+    function irParaConfirmacao() {
+      valoresAtuais = lerFormulario();
+      const anterior = ultimoRegistro();
+      const tabela   = document.getElementById('tabela-diff');
+      tabela.innerHTML = '';
+
+      document.getElementById('nome-conf').textContent = nomeSelecionado;
+
+      if (!anterior) {
+        tabela.innerHTML = '<tr><td colspan="2" style="color:#888;font-size:0.85rem;padding-top:4px;">Primeiro registro — sem turno anterior para comparar.</td></tr>';
+      } else {
+        ITENS.forEach(item => {
+          const ant = anterior.valores[item.id];
+          const atu = valoresAtuais[item.id];
+          let txt = '—', cls = 'diff-zero';
+          if (ant !== null && atu !== null) {
+            const d = atu - ant;
+            if (d > 0)      { txt = '+' + d; cls = 'diff-pos'; }
+            else if (d < 0) { txt = String(d); cls = 'diff-neg'; }
+            else            { txt = '='; }
+          }
+          tabela.innerHTML += `<tr><td>${item.label}</td><td class="${cls}">${txt}</td></tr>`;
+        });
+      }
+      mostrar('tela-confirmacao');
+    }
+
+    function confirmar() {
+      const h = carregarHistorico();
+      h.push({ timestamp: Date.now(), funcionario: nomeSelecionado, valores: valoresAtuais });
+      salvarHistorico(h);
+      limparAntigos();
+      mostrar('tela-final');
+    }
+
+    // ── Administração ────────────────────────────────────────────
+    function abrirAdm() {
+      document.getElementById('box-principal').classList.add('hidden');
+      document.getElementById('area-adm').classList.remove('hidden');
+      document.getElementById('adm-login').classList.remove('hidden');
+      document.getElementById('adm-painel').classList.add('hidden');
+      document.getElementById('adm-usuario').value = '';
+      document.getElementById('adm-senha').value   = '';
+      document.getElementById('adm-erro').textContent = '';
+    }
+
+    function sairAdm() {
+      document.getElementById('area-adm').classList.add('hidden');
+      document.getElementById('box-principal').classList.remove('hidden');
+      nomeSelecionado = null;
+      document.querySelectorAll('.nome-btn').forEach(b => b.classList.remove('selecionado'));
+      document.getElementById('btn-cadastrar').disabled = true;
+      mostrar('tela-inicial');
+    }
+
+    function fazerLogin() {
+      const u = document.getElementById('adm-usuario').value.trim();
+      const s = document.getElementById('adm-senha').value.trim();
+      if (u === ADM_USER && s === ADM_PASS) {
+        document.getElementById('adm-login').classList.add('hidden');
+        document.getElementById('adm-painel').classList.remove('hidden');
+        renderizarPainel();
+      } else {
+        document.getElementById('adm-erro').textContent = 'Usuário ou senha incorretos.';
+      }
+    }
+
+    function formatarTimestamp(ts) {
+      const d = new Date(ts);
+      return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear()
+           + '   ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    }
+
+    function renderizarPainel() {
+      const lista = document.getElementById('adm-lista');
+      const historico = carregarHistorico().slice().reverse();
+
+      if (historico.length === 0) {
+        lista.innerHTML = '<p class="adm-vazio">Nenhum registro salvo.</p>';
+        return;
+      }
+
+      lista.innerHTML = '';
+      historico.forEach((reg, idx) => {
+        const idxReal = carregarHistorico().length - 1 - idx;
+        const itensHtml = ITENS.map(item => {
+          const v = reg.valores[item.id];
+          return `${item.label}: <strong>${v !== null ? v : '—'}</strong>`;
+        }).join('<br>');
+
+        lista.innerHTML += `
+          <div class="registro" id="reg-${idxReal}">
+            <div class="registro-info">
+              <div class="registro-data">${formatarTimestamp(reg.timestamp)}</div>
+              <div class="registro-func">👤 ${reg.funcionario || '—'}</div>
+              <div class="registro-itens">${itensHtml}</div>
+            </div>
+            <button class="btn-excluir" onclick="excluirRegistro(${idxReal})">✕</button>
+          </div>`;
+      });
+    }
+
+    function excluirRegistro(idx) {
+      const h = carregarHistorico();
+      h.splice(idx, 1);
+      salvarHistorico(h);
+      renderizarPainel();
+    }
+
+    limparAntigos();
+
+    // ── PWA install ──────────────────────────────────────────────
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('btn-instalar').classList.remove('hidden');
+    });
+
+    function instalarApp() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById('btn-instalar').classList.add('hidden');
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('btn-instalar').classList.add('hidden');
+    });
+
+    // Registra Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('SW registrado:', reg.scope);
+      }).catch(err => console.log('SW erro:', err));
+    }
+  </script>
+
+</body>
+</html>
