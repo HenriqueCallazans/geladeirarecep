@@ -264,9 +264,6 @@
 
   <div id="datetime">--/--/---- --:--:--</div>
 
-  <!-- Botão instalar app (aparece quando disponível) -->
-  <button id="btn-instalar" class="hidden" onclick="instalarApp()">⬇ Instalar como aplicativo</button>
-
   <!-- Box fluxo normal -->
   <div class="box" id="box-principal">
 
@@ -311,27 +308,28 @@
 
   </div>
 
-  <!-- Área de administração -->
-  <div id="area-adm" class="hidden">
+<!-- Área de administração -->
+<div id="area-adm" class="hidden">
 
-    <div class="adm-box" id="adm-login">
-      <h2>Administração</h2>
-      <input type="text"     id="adm-usuario" placeholder="Usuário"/>
-      <input type="password" id="adm-senha"   placeholder="Senha"/>
-      <div id="adm-erro"></div>
-      <div class="adm-acoes">
-        <button onclick="fazerLogin()">Continuar</button>
-        <button class="btn-secundario" onclick="sairAdm()">Voltar</button>
-      </div>
+  <div class="adm-box" id="adm-login">
+    <h2>Administração</h2>
+    <input type="text"     id="adm-usuario" placeholder="Usuário"/>
+    <input type="password" id="adm-senha"   placeholder="Senha"/>
+    <div id="adm-erro"></div>
+    <div class="adm-acoes">
+      <button onclick="fazerLogin()">Continuar</button>
+      <button class="btn-secundario" onclick="sairAdm()">Voltar</button>
     </div>
-
-    <div class="adm-box hidden" id="adm-painel">
-      <h2>Registros salvos</h2>
-      <div id="adm-lista"></div>
-      <button class="btn-secundario" style="margin-top:20px;" onclick="sairAdm()">Sair</button>
-    </div>
-
   </div>
+
+  <div class="adm-box hidden" id="adm-painel">
+    <h2>Registros salvos</h2>
+    <div id="adm-lista"></div>
+    <button id="btn-instalar-adm" class="btn-secundario hidden" style="margin-top:20px;" onclick="instalarApp()">⬇ Instalar como aplicativo</button>
+    <button class="btn-secundario" style="margin-top:10px;" onclick="sairAdm()">Sair</button>
+  </div>
+
+</div>
 
   <script>
     const ITENS = [
